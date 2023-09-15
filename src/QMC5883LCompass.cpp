@@ -66,8 +66,9 @@ QMC5883LCompass::QMC5883LCompass() {
 	
 	@since v0.1;
 **/
-void QMC5883LCompass::init(){
-	Wire.begin();
+void QMC5883LCompass::init(TwoWire *wire){
+	_wire = wire;
+	_wire->begin();
 	_writeReg(0x0B,0x01);
 	setMode(0x01,0x0C,0x10,0X00);
 }
@@ -95,10 +96,10 @@ void QMC5883LCompass::setADDR(byte b){
 **/
 // Write register values to chip
 void QMC5883LCompass::_writeReg(byte r, byte v){
-	Wire.beginTransmission(_ADDR);
-	Wire.write(r);
-	Wire.write(v);
-	Wire.endTransmission();
+	_wire->beginTransmission(_ADDR);
+	_wire->write(r);
+	_wire->write(v);
+	_wire->endTransmission();
 }
 
 
@@ -257,14 +258,14 @@ void QMC5883LCompass::clearCalibration(){
 	@since v0.1;
 **/
 void QMC5883LCompass::read(){
-	Wire.beginTransmission(_ADDR);
-	Wire.write(0x00);
-	int err = Wire.endTransmission();
+	_wire->beginTransmission(_ADDR);
+	_wire->write(0x00);
+	int err = _wire->endTransmission();
 	if (!err) {
-		Wire.requestFrom(_ADDR, (byte)6);
-		_vRaw[0] = (int)(int16_t)(Wire.read() | Wire.read() << 8);
-		_vRaw[1] = (int)(int16_t)(Wire.read() | Wire.read() << 8);
-		_vRaw[2] = (int)(int16_t)(Wire.read() | Wire.read() << 8);
+		_wire->requestFrom(_ADDR, (byte)6);
+		_vRaw[0] = (int)(int16_t)(_wire->read() | _wire->read() << 8);
+		_vRaw[1] = (int)(int16_t)(_wire->read() | _wire->read() << 8);
+		_vRaw[2] = (int)(int16_t)(_wire->read() | _wire->read() << 8);
 
 		_applyCalibration();
 		
@@ -272,7 +273,7 @@ void QMC5883LCompass::read(){
 			_smoothing();
 		}
 		
-		//byte overflow = Wire.read() & 0x02;
+		//byte overflow = _wire->read() & 0x02;
 		//return overflow << 2;
 	}
 }
